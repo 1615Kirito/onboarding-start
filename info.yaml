@@ -1,4 +1,5 @@
 # info.yaml  
+yaml_version: 6
 title: "ASIC Onboarding Project - Houtao Liu"  
 author: "Houtao Liu"  
 description: "SPI-controlled PWM peripheral for Tiny Tapeout."  

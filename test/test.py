@@ -152,7 +152,73 @@ async def test_spi(dut):
 @cocotb.test()
 async def test_pwm_freq(dut):
     # Write your test here
+
+    dut._log.info("Start PWM Frequency test")
+    
+    # Set the clock period to 100 ns (10 MHz)
+    clock = Clock(dut.clk, 100, units="ns")
+    cocotb.start_soon(clock.start())
+
+    # Reset
+    dut._log.info("Reset")
+    dut.ena.value = 1
+    ncs = 1
+    bit = 0
+    sclk = 0
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 5)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 5)
+
+    #Enable PWM
+    await send_spi_transaction(dut, 1, 0x02, 0x01)  # Write transaction to enable PWM
+
+    #Enable Output
+    await send_spi_transaction(dut, 1, 0x00, 0x01)  # Write transaction to enable output
+
+    #Generate PWM signal for 50% duty cycle
+    await send_spi_transaction(dut, 1, 0x04, 0x80)  # Write transaction to set duty cycle to 50%
+
+
+    #Check if PWM get 2 rising edges
+
+    previous = int(dut.uo_out.value) & 1
+    rising_edges = []
+
+    for cycle in range(10000):
+        await ClockCycles(dut.clk, 1)
+
+        current = int(dut.uo_out.value) & 1
+
+        # Detect rising edge: 0 -> 1
+        if previous == 0 and current == 1:
+            rising_edges.append(cycle)
+            dut._log.info(f"Rising edge detected at cycle {cycle}")
+
+        if len(rising_edges) == 2:
+            break
+
+        previous = current
+
+    assert len(rising_edges) == 2, "Failed to detect two PWM rising edges"
+
+
+    period_cycles = rising_edges[1] - rising_edges[0]
+
+    frequency = 10_000_000 / period_cycles
+
+    dut._log.info(f"PWM period: {period_cycles} cycles")
+    dut._log.info(f"PWM frequency: {frequency:.2f} Hz")
+
+    assert abs(frequency - 3004.8) < 30, \
+        f"PWM frequency incorrect: {frequency:.2f} Hz"
+
+
+
     dut._log.info("PWM Frequency test completed successfully")
+
+
 
 
 @cocotb.test()
