@@ -22,5 +22,19 @@ module tt_um_uwasic_onboarding_houtao_liu(...)
     .pwm_duty_cycle(pwm_duty_cycle),
     .out({uio_out, uo_out})
   );
+
+  // Instantiate the SPI module
+  spi_peripheral spi_peripheral_inst (
+    .clk(clk),
+    .rst_n(rst_n),
+    .sclk(sclk),
+    .cs_n(cs_n),
+    .copi(copi),
+    .en_reg_out_7_0(en_reg_out_7_0),
+    .en_reg_out_15_8(en_reg_out_15_8),
+    .en_reg_pwm_7_0(en_reg_pwm_7_0),
+    .en_reg_pwm_15_8(en_reg_pwm_15_8),
+    .pwm_duty_cycle(pwm_duty_cycle)
+  );
   // Add uio_in and ui_in[7:3] to the list of unused signals:
   wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0};
