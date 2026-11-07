@@ -12,7 +12,7 @@ module tt_um_uwasic_onboarding_houtao_liu(
     input  wire       ena,
     input  wire       clk,
     input  wire       rst_n
-)
+);
 
   // Add this inside the module block
   assign uio_oe = 8'hFF; // Set all IOs to output
