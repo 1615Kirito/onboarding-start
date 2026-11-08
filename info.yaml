@@ -5,7 +5,7 @@ author: "Houtao Liu"
 description: "SPI-controlled PWM peripheral for Tiny Tapeout."  
 top_module: "tt_um_uwasic_onboarding_houtao_liu"  # Match your top module name  
 source_files:  
-  - "spi peripheral"
+  - spi_peripheral.v
   - pwm_peripheral.v  
   - project.v
 

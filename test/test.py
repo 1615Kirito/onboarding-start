@@ -220,8 +220,82 @@ async def test_pwm_freq(dut):
 
 
 
-
 @cocotb.test()
 async def test_pwm_duty(dut):
     # Write your test here
+    dut._log.info("Start PWM Duty Cycle test")
+    
+    # Set the clock period to 100 ns (10 MHz)
+    clock = Clock(dut.clk, 100, units="ns")
+    cocotb.start_soon(clock.start())
+
+    # Reset
+    dut._log.info("Reset")
+    dut.ena.value = 1
+    ncs = 1
+    bit = 0
+    sclk = 0
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 5)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 5)
+
+
+    await send_spi_transaction(dut, 1, 0x02, 0x01)  # Write transaction to enable PWM
+
+    #Enable Output
+    await send_spi_transaction(dut, 1, 0x00, 0x01)  # Write transaction to enable output
+
+
+    period = 13*256
+
+    test_cases = [
+        (0x00, 0.0),   # 0% duty cycle
+        (0x40, 0.25),   # 25% duty cycle
+        (0x80, 0.5),  # 50% duty cycle
+        (0xC0, 0.75),  # 75% duty cycle
+        (0xFF, 1.0)  # 100% duty cycle
+    ]
+
+    for duty_value, expected_duty in test_cases:
+        await send_spi_transaction(dut, 1, 0x04, duty_value)  # Write transaction to set duty cycle
+        await ClockCycles(dut.clk, period)  # Wait for a full PWM period
+
+
+        # Measure the duty cycle
+        high_cycles = 0
+
+        for cycle in range(period):
+
+            await RisingEdge(dut.clk)
+            
+            if int(dut.uo_out.value) & 1:
+                high_cycles += 1
+
+        measured_duty = high_cycles / period
+
+        dut._log.info(
+            f"Duty register: {duty_value:#04x}, "
+            f"Expected: {expected_duty:.2%}, "
+            f"Measured: {measured_duty:.2%}"
+        )
+
+        # Allow one PWM counter tick of tolerance
+        if duty_value == 0x00:
+            assert high_cycles == 0, (
+                "0% duty cycle should always stay LOW"
+            )
+
+        elif duty_value == 0xFF:
+            assert high_cycles == period, (
+                "100% duty cycle should always stay HIGH"
+            )
+
+        else:
+            assert abs(measured_duty - expected_duty) <= 1/256, (
+                f"Expected {expected_duty:.2%}, "
+                f"got {measured_duty:.2%}"
+            )
+
     dut._log.info("PWM Duty Cycle test completed successfully")
