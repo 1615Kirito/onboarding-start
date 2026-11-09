@@ -48,7 +48,7 @@ module spi_peripheral (
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            spi_shift_reg <= 16'b0;
+            spi_shift_reg <= 15'b0;
             bit_count <= 5'b0;
 
             en_reg_out_7_0 <= 8'b0;
@@ -59,11 +59,11 @@ module spi_peripheral (
 
         end else if (cs_n_sync[1]) begin // Active when chip select is low
             
-            spi_shift_reg <= 16'b0;
+            spi_shift_reg <= 15'b0;
             bit_count <= 5'b0;
             
         end else if (sclk_rising_edge && bit_count < 5'd16) begin
-            spi_shift_reg <= {spi_shift_reg[14:0], copi_sync[1]};
+            spi_shift_reg <= {spi_shift_reg[13:0], copi_sync[1]};
             bit_count <= bit_count + 1;
 
             // If we have received 16 bits, process the command
