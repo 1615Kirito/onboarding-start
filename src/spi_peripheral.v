@@ -37,7 +37,7 @@ module spi_peripheral (
     wire sclk_rising_edge = (sclk_sync[2:1] == 2'b01);
 
     // Shift register to capture incoming SPI data
-    reg [15:0] spi_shift_reg;
+    reg [14:0] spi_shift_reg;
     reg [4:0] bit_count;
 
     // SPI address split
